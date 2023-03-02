@@ -1,0 +1,34 @@
+name: "ConView Application test"
+description: "Test a particular ConView application"
+inputs:
+  application: # id of input
+    description: "Application to test"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        pip install -r cv_modbus_server/requirements.txt
+
+    - name: Lint and format
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 cv_modbus_server --count --select=E9,F63,F7,F82 --show-source --statistics
+
+        # TODO remove --exit-zero once issues are resolved
+        flake8 cv_modbus_server --count --exit-zero --statistics
+
+        isort cv_modbus_server --check  --profile black --filter-files
+        black cv_modbus_server --check
+
+    - name: Test with pytest
+      run: |
+        pytest tests/cv_modbus_server/
